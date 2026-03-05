@@ -1,0 +1,16 @@
+.seat {
+  position: absolute;
+
+  width: 55px;
+  height: 55px;
+
+  background: white;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: black;
+  font-size: 11px;
+  font-weight: bold;
+}
