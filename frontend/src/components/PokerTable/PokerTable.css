@@ -1,0 +1,51 @@
+.table {
+  width: 95dvw;
+  height: 60dvh;
+  background: #0b6623;
+  border-radius: 50%;
+  position: relative;
+  margin: 40px auto;
+}
+.seat1 {
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.seat2 {
+  top: 10%;
+  right: -25px;
+}
+
+.seat3 {
+  top: 50%;
+  right: -35px;
+  transform: translateY(-50%);
+}
+
+.seat4 {
+  bottom: 10%;
+  right: -25px;
+}
+
+.seat5 {
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.seat6 {
+  bottom: 10%;
+  left: -25px;
+}
+
+.seat7 {
+  top: 50%;
+  left: -35px;
+  transform: translateY(-50%);
+}
+
+.seat8 {
+  top: 10%;
+  left: -25px;
+}

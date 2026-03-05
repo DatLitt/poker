@@ -1,14 +1,18 @@
-import { useEffect } from "react";
 import { socket } from "./socket";
-
+import { useEffect } from "react";
+import PokerTable from "./components/PokerTable/PokerTable";
 function App() {
   useEffect(() => {
-    socket.on("connect", () => {
-      console.log("Connected:", socket.id);
+    socket.emit("join_table", {
+      name: "Dat",
     });
   }, []);
 
-  return <div>Poker Game</div>;
+  return (
+    <div>
+      <PokerTable />
+    </div>
+  );
 }
 
 export default App;
