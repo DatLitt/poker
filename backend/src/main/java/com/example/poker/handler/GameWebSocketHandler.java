@@ -1,21 +1,25 @@
 package com.example.poker.handler;
 
+import com.example.poker.dto.TableState;
 import com.example.poker.model.Player;
+import com.example.poker.service.SessionManager;
 import com.example.poker.service.TableManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.stereotype.Component;
+
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-@Component
 public class GameWebSocketHandler extends TextWebSocketHandler {
 
-    private final TableManager tableManager;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private TableManager tableManager = new TableManager();
 
-    public GameWebSocketHandler(TableManager tableManager) {
-        this.tableManager = tableManager;
+    private ObjectMapper mapper = new ObjectMapper();
+
+    @Override
+    public void afterConnectionEstablished(WebSocketSession session) {
+
+        SessionManager.add(session);
     }
 
     @Override
@@ -25,65 +29,41 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
         String type = json.get("type").asText();
 
-        if (type.equals("join_table")) {
+        if ("join_table".equals(type)) {
 
             String name = json.get("name").asText();
 
-            Player player = new Player(name, -1, session);
-
-            int seat = tableManager.assignSeat(player);
-
-            if (seat == -1) {
-
-                session.sendMessage(new TextMessage(
-                        "{\"type\":\"table_full\"}"
-                ));
-
+            Player player = tableManager.addPlayer(name, session);
+            if (player == null) {
+                session.sendMessage(new TextMessage("{\"type\":\"table_full\"}"));
                 return;
             }
 
-            player.setSeat(seat);
-
-            sendTableState(player);
-
+            broadcastTableState();
         }
-
-    }
-
-    private void sendTableState(Player player) throws Exception {
-
-        String[] seats = tableManager.getSeatNames();
-
-        var response = mapper.createObjectNode();
-
-        response.put("type", "table_state");
-
-        var seatArray = mapper.createArrayNode();
-
-        for (String name : seats) {
-
-            if (name == null)
-                seatArray.addNull();
-            else
-                seatArray.add(name);
-
-        }
-
-        response.set("seats", seatArray);
-
-        response.put("yourSeat", player.getSeat());
-
-        player.getSession().sendMessage(
-                new TextMessage(response.toString())
-        );
-
     }
 
     @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+
+        SessionManager.remove(session);
 
         tableManager.removePlayer(session);
 
+        broadcastTableState();
     }
 
+    private void broadcastTableState() throws Exception {
+
+        String[] seats = tableManager.getSeatNames();
+
+        for (Player player : tableManager.getPlayers()) {
+
+            TableState state = new TableState(seats, player.getSeat());
+
+            String json = mapper.writeValueAsString(state);
+
+            player.getSession().sendMessage(new TextMessage(json));
+        }
+    }
 }

@@ -1,61 +1,65 @@
 package com.example.poker.service;
 
-import org.springframework.stereotype.Component;
-import org.springframework.web.socket.WebSocketSession;
-
 import com.example.poker.model.Player;
 
-@Component
+import java.util.ArrayList;
+import java.util.List;
+
 public class TableManager {
 
-    private final Player[] seats = new Player[8];
+    private static final int MAX_SEATS = 8;
 
-    public synchronized int assignSeat(Player player) {
+    private Player[] seats = new Player[MAX_SEATS];
 
-        for (int i = 0; i < seats.length; i++) {
+    public synchronized Player addPlayer(String name, org.springframework.web.socket.WebSocketSession session) {
 
+        for (int i = 0; i < MAX_SEATS; i++) {
             if (seats[i] == null) {
-                seats[i] = player;
-                return i;
-            }
 
+                Player player = new Player(name, i, session);
+                seats[i] = player;
+
+                return player;
+            }
         }
 
-        return -1;
+        return null;
     }
 
-    public synchronized void removePlayer(WebSocketSession session) {
+    public synchronized void removePlayer(org.springframework.web.socket.WebSocketSession session) {
 
-        for (int i = 0; i < seats.length; i++) {
-
-            if (seats[i] != null &&
-                seats[i].getSession().getId().equals(session.getId())) {
-
+        for (int i = 0; i < MAX_SEATS; i++) {
+            if (seats[i] != null && seats[i].getSession().getId().equals(session.getId())) {
                 seats[i] = null;
             }
-
         }
-
     }
 
     public synchronized String[] getSeatNames() {
 
-        String[] names = new String[8];
+        String[] result = new String[MAX_SEATS];
 
-        for (int i = 0; i < seats.length; i++) {
-
+        for (int i = 0; i < MAX_SEATS; i++) {
             if (seats[i] != null) {
-                names[i] = seats[i].getName();
+                result[i] = seats[i].getName();
             } else {
-                names[i] = null;
+                result[i] = null;
             }
-
         }
 
-        return names;
+        return result;
     }
 
-    public Player[] getSeats() {
-        return seats;
+    public List<Player> getPlayers() {
+
+        List<Player> list = new ArrayList<>();
+
+        for (Player p : seats) {
+            if (p != null) {
+                list.add(p);
+            }
+        }
+
+        return list;
     }
 }
