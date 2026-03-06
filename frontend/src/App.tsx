@@ -1,15 +1,22 @@
-import { socket } from "./socket";
+import { socket } from "./socket/socket";
 import { useEffect } from "react";
 import PokerTable from "./components/PokerTable/PokerTable";
+import "./App.css";
 function App() {
   useEffect(() => {
-    socket.emit("join_table", {
-      name: "Dat",
-    });
-  }, []);
+    socket.onopen = () => {
+      console.log("connected");
 
+      socket.send(
+        JSON.stringify({
+          type: "join_table",
+          name: "Player123",
+        }),
+      );
+    };
+  }, []);
   return (
-    <div>
+    <div className="container">
       <PokerTable />
     </div>
   );
