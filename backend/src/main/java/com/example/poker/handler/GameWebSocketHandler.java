@@ -99,7 +99,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     }
 
     private void broadcastCountdown() throws Exception {
-
+        System.out.println("dmm");        
         int seconds = tableManager.getCountdown();
 
         Map<String,Object> msg = new HashMap<>();
