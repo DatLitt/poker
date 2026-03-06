@@ -1,13 +1,15 @@
 package com.example.poker.dto;
 
+import java.util.List;
+
 public class TableState {
 
     private String type = "table_state";
-    private String[] seats;
+    private List<String> seats;
     private int yourSeat;
 
-    public TableState(String[] seats, int yourSeat) {
-        this.seats = seats;
+    public TableState(List<String> seats2, int yourSeat) {
+        this.seats = seats2;
         this.yourSeat = yourSeat;
     }
 
@@ -15,7 +17,7 @@ public class TableState {
         return type;
     }
 
-    public String[] getSeats() {
+    public List<String> getSeats() {
         return seats;
     }
 

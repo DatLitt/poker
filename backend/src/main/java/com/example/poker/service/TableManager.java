@@ -1,23 +1,42 @@
 package com.example.poker.service;
 
 import com.example.poker.model.Player;
+import org.springframework.web.socket.WebSocketSession;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.*;
 
 public class TableManager {
 
-    private static final int MAX_SEATS = 8;
+    private final int MAX_SEATS = 9;
 
-    private Player[] seats = new Player[MAX_SEATS];
+    private final List<Player> seats = new ArrayList<>(Collections.nCopies(MAX_SEATS, null));
 
-    public synchronized Player addPlayer(String name, org.springframework.web.socket.WebSocketSession session) {
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+    private ScheduledFuture<?> countdownTask;
+
+    private int countdown = 10;
+
+    public List<Player> getPlayers() {
+        return seats;
+    }
+
+    public int getPlayerCount() {
+        int count = 0;
+        for (Player p : seats) {
+            if (p != null) count++;
+        }
+        return count;
+    }
+
+    public Player addPlayer(String name, WebSocketSession session) {
 
         for (int i = 0; i < MAX_SEATS; i++) {
-            if (seats[i] == null) {
+            if (seats.get(i) == null) {
 
                 Player player = new Player(name, i, session);
-                seats[i] = player;
+                seats.set(i, player);
 
                 return player;
             }
@@ -26,40 +45,76 @@ public class TableManager {
         return null;
     }
 
-    public synchronized void removePlayer(org.springframework.web.socket.WebSocketSession session) {
+    public void removePlayer(WebSocketSession session) {
 
         for (int i = 0; i < MAX_SEATS; i++) {
-            if (seats[i] != null && seats[i].getSession().getId().equals(session.getId())) {
-                seats[i] = null;
+
+            Player p = seats.get(i);
+
+            if (p != null && p.getSession().getId().equals(session.getId())) {
+                seats.set(i, null);
             }
+
+        }
+
+        if (getPlayerCount() < 2) {
+            cancelCountdown();
         }
     }
 
-    public synchronized String[] getSeatNames() {
-
-        String[] result = new String[MAX_SEATS];
-
-        for (int i = 0; i < MAX_SEATS; i++) {
-            if (seats[i] != null) {
-                result[i] = seats[i].getName();
-            } else {
-                result[i] = null;
-            }
-        }
-
-        return result;
+    public boolean shouldStartCountdown() {
+        return getPlayerCount() >= 2;
     }
 
-    public List<Player> getPlayers() {
+    public boolean isCountdownRunning() {
+        return countdownTask != null && !countdownTask.isDone();
+    }
 
-        List<Player> list = new ArrayList<>();
+    public void startCountdown(Runnable callback) {
+
+        countdown = 10;
+
+        countdownTask = scheduler.scheduleAtFixedRate(() -> {
+
+            callback.run();
+
+            countdown--;
+
+            if (countdown < 0) {
+                countdownTask.cancel(false);
+            }
+
+        }, 0, 1, TimeUnit.SECONDS);
+    }
+
+    public void cancelCountdown() {
+
+        if (countdownTask != null && !countdownTask.isDone()) {
+            countdownTask.cancel(true);
+        }
+
+        countdownTask = null;
+    }
+
+    public int getCountdown() {
+        return countdown;
+    }
+
+    public List<String> getSeatNames() {
+
+        List<String> names = new ArrayList<>();
 
         for (Player p : seats) {
-            if (p != null) {
-                list.add(p);
+
+            if (p == null) {
+                names.add(null);
+            } else {
+                names.add(p.getName());
             }
+
         }
 
-        return list;
+        return names;
     }
+
 }
