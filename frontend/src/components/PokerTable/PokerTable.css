@@ -1,25 +1,42 @@
 .table {
-  width: 95dvw;
-  height: 60dvh;
-  background: #0b6623;
+  width: 80dvw;
+  height: 70dvh;
   border-radius: 50%;
   position: relative;
-  margin: 40px auto;
+  background-image: url("/table.jpg");
+  background-size: cover;
+  background-position: center;
+}
+.waiting {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5rem;
+  color: white;
+}
+.countdown {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.2rem;
+  color: white;
 }
 .seat1 {
-  top: -25px;
+  top: -80px;
   left: 50%;
   transform: translateX(-50%);
 }
 
 .seat2 {
-  top: 10%;
-  right: -25px;
+  top: 5%;
+  right: -20px;
 }
 
 .seat3 {
   top: 50%;
-  right: -35px;
+  right: -50px;
   transform: translateY(-50%);
 }
 
@@ -29,7 +46,7 @@
 }
 
 .seat5 {
-  bottom: -25px;
+  bottom: -80px;
   left: 50%;
   transform: translateX(-50%);
 }
@@ -41,7 +58,7 @@
 
 .seat7 {
   top: 50%;
-  left: -35px;
+  left: -50px;
   transform: translateY(-50%);
 }
 
