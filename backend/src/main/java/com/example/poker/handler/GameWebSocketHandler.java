@@ -12,7 +12,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 public class GameWebSocketHandler extends TextWebSocketHandler {
 
-    private TableManager tableManager = new TableManager();
+    private static final TableManager tableManager = new TableManager();
 
     private ObjectMapper mapper = new ObjectMapper();
 
