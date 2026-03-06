@@ -8,7 +8,7 @@ import java.util.concurrent.*;
 
 public class TableManager {
 
-    private final int MAX_SEATS = 9;
+    private final int MAX_SEATS = 8;
 
     private final List<Player> seats = new ArrayList<>(Collections.nCopies(MAX_SEATS, null));
 
