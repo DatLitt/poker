@@ -30,42 +30,46 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+        try {
 
-        JsonNode json = mapper.readTree(message.getPayload());
+            JsonNode json = mapper.readTree(message.getPayload());
 
-        String type = json.get("type").asText();
+            String type = json.get("type").asText();
 
-        if ("join_table".equals(type)) {
+            if ("join_table".equals(type)) {
 
-            String name = json.get("name").asText();
+                String name = json.get("name").asText();
 
-            Player player = tableManager.addPlayer(name, session);
+                Player player = tableManager.addPlayer(name, session);
 
-            if (player == null) {
-                session.sendMessage(new TextMessage("{\"type\":\"table_full\"}"));
-                return;
-            }
-
-            broadcastTableState();
-
-            if (tableManager.shouldStartCountdown()) {
-
-                if (tableManager.isCountdownRunning()) {
-                    tableManager.resetCountdown();   // reset to 10
-                } else {
-
-                    tableManager.startCountdown(() -> {
-                        try {
-                            broadcastCountdown();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    });
-
+                if (player == null) {
+                    session.sendMessage(new TextMessage("{\"type\":\"table_full\"}"));
+                    return;
                 }
 
+                broadcastTableState();
+
+                if (tableManager.shouldStartCountdown()) {
+
+                    if (tableManager.isCountdownRunning()) {
+                        tableManager.resetCountdown();   // reset to 10
+                    } else {
+
+                        tableManager.startCountdown(() -> {
+                            try {
+                                broadcastCountdown();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        });
+
+                    }
+
+                }
             }
-        }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } 
     }
 
     @Override
@@ -88,7 +92,9 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
             String json = mapper.writeValueAsString(state);
 
-            player.getSession().sendMessage(new TextMessage(json));
+            if (player != null && player.getSession().isOpen()) {
+                player.getSession().sendMessage(new TextMessage(json));
+            }
         }
     }
 
