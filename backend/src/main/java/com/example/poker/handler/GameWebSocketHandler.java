@@ -88,11 +88,12 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
         for (Player player : tableManager.getPlayers()) {
 
-            TableState state = new TableState(seats, player.getSeat());
-
-            String json = mapper.writeValueAsString(state);
-
             if (player != null && player.getSession().isOpen()) {
+
+                TableState state = new TableState(seats, player.getSeat());
+
+                String json = mapper.writeValueAsString(state);
+
                 player.getSession().sendMessage(new TextMessage(json));
             }
         }

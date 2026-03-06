@@ -76,12 +76,23 @@ public class TableManager {
 
         countdownTask = scheduler.scheduleAtFixedRate(() -> {
 
-            callback.run();
+            try {
 
-            countdown--;
+                if (getPlayerCount() < 2) {
+                    cancelCountdown();
+                    return;
+                }
 
-            if (countdown < 0) {
-                countdownTask.cancel(false);
+                callback.run();
+
+                countdown--;
+
+                if (countdown < 0) {
+                    cancelCountdown();
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
         }, 0, 1, TimeUnit.SECONDS);
