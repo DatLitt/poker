@@ -40,7 +40,7 @@ public class TableManager {
 
     public synchronized String[] getSeatNames() {
 
-        String[] names = new String[9];
+        String[] names = new String[8];
 
         for (int i = 0; i < seats.length; i++) {
 
