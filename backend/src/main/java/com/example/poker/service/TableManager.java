@@ -8,7 +8,7 @@ import com.example.poker.model.Player;
 @Component
 public class TableManager {
 
-    private final Player[] seats = new Player[9];
+    private final Player[] seats = new Player[8];
 
     public synchronized int assignSeat(Player player) {
 
