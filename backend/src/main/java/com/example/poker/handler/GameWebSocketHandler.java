@@ -48,17 +48,21 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
             broadcastTableState();
 
-            if (tableManager.shouldStartCountdown() && !tableManager.isCountdownRunning()) {
+            if (tableManager.shouldStartCountdown()) {
 
-                tableManager.startCountdown(() -> {
+                if (tableManager.isCountdownRunning()) {
+                    tableManager.resetCountdown();   // reset to 10
+                } else {
 
-                    try {
-                        broadcastCountdown();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    tableManager.startCountdown(() -> {
+                        try {
+                            broadcastCountdown();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    });
 
-                });
+                }
 
             }
         }

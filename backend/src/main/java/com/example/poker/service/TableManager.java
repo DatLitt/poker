@@ -96,6 +96,10 @@ public class TableManager {
         countdownTask = null;
     }
 
+    public void resetCountdown() {
+        countdown = 10;
+    }
+
     public int getCountdown() {
         return countdown;
     }
