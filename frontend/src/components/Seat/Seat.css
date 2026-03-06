@@ -1,7 +1,7 @@
 .seat {
   position: absolute;
 
-  width: 55px;
+  width: fit-content;
   height: 55px;
 
   background: white;

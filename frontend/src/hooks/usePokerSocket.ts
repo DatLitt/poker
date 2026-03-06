@@ -25,6 +25,7 @@ export function usePokerSocket(
         case "game_countdown":
           setCountdown(data.seconds);
           setGameState("countdown");
+          console.log("Game starts in", data.seconds, "seconds");
           break;
       }
     };
