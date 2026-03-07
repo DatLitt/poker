@@ -7,6 +7,7 @@ export function usePokerSocket(
   setTableFull: Dispatch<SetStateAction<boolean>>,
   setCountdown: Dispatch<SetStateAction<number | null>>,
   setGameState: Dispatch<SetStateAction<"waiting" | "countdown" | "playing">>,
+  setPlayerCards: Dispatch<SetStateAction<string[]>>,
 ) {
   useEffect(() => {
     const handler = (event: MessageEvent) => {
@@ -27,6 +28,16 @@ export function usePokerSocket(
           setGameState("countdown");
           console.log("Game starts in", data.seconds, "seconds");
           break;
+        // case "game_start":
+        //   setGameState("playing");
+        //   break;
+        case "deal_cards":
+          setGameState("playing");
+          console.log("Your cards:", data.cards);
+          setPlayerCards(data.cards);
+          break;
+        default:
+          console.warn("Unknown message type:", data.type);
       }
     };
 

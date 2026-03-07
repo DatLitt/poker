@@ -11,7 +11,15 @@ export default function PokerTable() {
   const [gameState, setGameState] = useState<
     "waiting" | "countdown" | "playing"
   >("waiting");
-  usePokerSocket(setSeats, setYourId, setTableFull, setCountdown, setGameState);
+  const [playerCards, setPlayerCards] = useState<string[]>([]);
+  usePokerSocket(
+    setSeats,
+    setYourId,
+    setTableFull,
+    setCountdown,
+    setGameState,
+    setPlayerCards,
+  );
 
   function rotateSeats(seats: (string | null)[], yourId: number) {
     const targetSeat = 4; // seat bottom (UI position)
@@ -39,6 +47,9 @@ export default function PokerTable() {
         displaySeats.map((player, i) => (
           <Seat key={i} player={player} className={`seat seat${i + 1}`} />
         ))}
+      {gameState === "playing" && (
+        <div className="player-cards">Your Cards: {playerCards.join(", ")}</div>
+      )}
     </div>
   );
 }
