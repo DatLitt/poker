@@ -80,6 +80,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
         broadcastTableState();
         broadcastQueuePositions();
+        broadcastCountdown();
     }
 
     private void broadcastTableState() throws Exception {
