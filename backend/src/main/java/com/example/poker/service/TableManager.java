@@ -85,6 +85,8 @@ public class TableManager {
             next.setSeat(seatIndex);
 
             seats.set(seatIndex, next);
+
+            resetCountdown();
         }
 
         return next;
