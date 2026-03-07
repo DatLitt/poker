@@ -192,4 +192,13 @@ public class TableManager {
         return names;
     }
 
+    public int findSeatBySession(WebSocketSession session){
+
+        for(Player p:seats)
+            if(p!=null && p.getSession().getId().equals(session.getId()))
+                return p.getSeat();
+
+        return -1;
+    }
+
 }

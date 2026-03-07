@@ -1,6 +1,7 @@
 package com.example.poker.handler;
 
 import com.example.poker.dto.TableState;
+import com.example.poker.game.GameEngine;
 import com.example.poker.model.Player;
 import com.example.poker.service.SessionManager;
 import com.example.poker.service.TableManager;
@@ -19,6 +20,8 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 public class GameWebSocketHandler extends TextWebSocketHandler {
 
     private static final TableManager tableManager = new TableManager();
+
+    private static final GameEngine gameEngine = new GameEngine(tableManager);
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -58,6 +61,9 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                         tableManager.startCountdown(() -> {
                             try {
                                 broadcastCountdown();
+                                if(tableManager.getCountdown() == 0){
+                                    gameEngine.startGame();
+                                }
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -65,6 +71,20 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
                     }
                 }
+            }
+            if("player_action".equals(type)){
+
+                String action = json.get("action").asText();
+
+                Integer amount = null;
+
+                if(json.has("amount")){
+                    amount = json.get("amount").asInt();
+                }
+
+                int seat = tableManager.findSeatBySession(session);
+
+                gameEngine.handleAction(seat,action,amount);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -83,6 +103,9 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 tableManager.startCountdown(() -> {
                     try {
                         broadcastCountdown();
+                        if(tableManager.getCountdown() == 0){
+                            gameEngine.startGame();
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
