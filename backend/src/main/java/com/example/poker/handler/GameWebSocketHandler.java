@@ -42,17 +42,22 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
                 Player player = tableManager.addPlayer(name, session);
 
-                if (player == null) {
-                    session.sendMessage(new TextMessage("{\"type\":\"table_full\"}"));
+                if (player.getSeat() == -1) {
+
+                    Map<String,Object> msg = new HashMap<>();
+                    msg.put("type","queue_status");
+                    msg.put("position", tableManager.getQueuePosition(player));
+
+                    session.sendMessage(new TextMessage(mapper.writeValueAsString(msg)));
                     return;
                 }
 
                 broadcastTableState();
 
-                if (tableManager.shouldStartCountdown()) {
+                if (player.getSeat() >= 0 && tableManager.shouldStartCountdown()) {
 
                     if (tableManager.isCountdownRunning()) {
-                        tableManager.resetCountdown();   // reset to 10
+                        tableManager.resetCountdown();
                     } else {
 
                         tableManager.startCountdown(() -> {
@@ -64,7 +69,6 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                         });
 
                     }
-
                 }
             }
         } catch (Exception e) {
@@ -85,8 +89,6 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     private void broadcastTableState() throws Exception {
 
         List<String> seats = tableManager.getSeatNames();
-
-        List<String> queue = tableManager.getQueueNames();
 
         for (Player player : tableManager.getPlayers()) {
 

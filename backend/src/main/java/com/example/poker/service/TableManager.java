@@ -48,7 +48,7 @@ public class TableManager {
         Player player = new Player(name, -1, session);
         waitingQueue.add(player);
 
-        return player;
+        return null;
     }
 
     public void removePlayer(WebSocketSession session) {
@@ -97,6 +97,22 @@ public class TableManager {
         }
 
         return names;
+    }
+
+    public int getQueuePosition(Player player) {
+
+        int position = 1;
+
+        for (Player p : waitingQueue) {
+
+            if (p == player) {
+                return position;
+            }
+
+            position++;
+        }
+
+        return -1; // player not found
     }
 
     public boolean shouldStartCountdown() {
