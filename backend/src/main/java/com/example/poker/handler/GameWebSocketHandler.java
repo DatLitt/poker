@@ -20,31 +20,45 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 public class GameWebSocketHandler extends TextWebSocketHandler {
 
     private static final TableManager tableManager = new TableManager();
-
     private static final GameEngine gameEngine = new GameEngine(tableManager);
 
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-
         SessionManager.add(session);
     }
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) {
+
         try {
 
             JsonNode json = mapper.readTree(message.getPayload());
-
             String type = json.get("type").asText();
 
+            // =========================
+            // JOIN TABLE
+            // =========================
             if ("join_table".equals(type)) {
 
                 String name = json.get("name").asText();
 
-                Player player = tableManager.addPlayer(name, session);
+                Player player;
 
+                // GAME RUNNING → spectator
+                if (gameEngine.isGameRunning()) {
+
+                    player = tableManager.addSpectator(name, session);
+
+                    sendSpectatorState(player);
+                    return;
+                }
+
+                // NORMAL JOIN
+                player = tableManager.addPlayer(name, session);
+
+                // TABLE FULL → queue
                 if (player.getSeat() == -1) {
                     broadcastQueuePositions();
                     return;
@@ -52,71 +66,92 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
                 broadcastTableState();
 
-                if (player.getSeat() >= 0 && tableManager.shouldStartCountdown()) {
-
-                    if (tableManager.isCountdownRunning()) {
-                        tableManager.resetCountdown();
-                    } else {
-
-                        tableManager.startCountdown(() -> {
-                            try {
-                                broadcastCountdown();
-                                if(tableManager.getCountdown() == 0){
-                                    gameEngine.startGame();
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        });
-
-                    }
-                }
+                startCountdownIfReady();
             }
-            if("player_action".equals(type)){
+
+            // =========================
+            // PLAYER ACTION
+            // =========================
+            if ("player_action".equals(type)) {
 
                 String action = json.get("action").asText();
 
                 Integer amount = null;
-
-                if(json.has("amount")){
+                if (json.has("amount")) {
                     amount = json.get("amount").asInt();
                 }
 
                 int seat = tableManager.findSeatBySession(session);
 
-                gameEngine.handleAction(seat,action,amount);
+                gameEngine.handleAction(seat, action, amount);
             }
+
         } catch (Exception e) {
             e.printStackTrace();
-        } 
+        }
     }
 
+    // =========================
+    // DISCONNECT
+    // =========================
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
 
         SessionManager.remove(session);
 
-        if (tableManager.removePlayer(session) != null) { //if someone join from queue, reset countdown
-            if (tableManager.isCountdownRunning()) {
-                tableManager.resetCountdown();
-            } else {
-                tableManager.startCountdown(() -> {
-                    try {
-                        broadcastCountdown();
-                        if(tableManager.getCountdown() == 0){
-                            gameEngine.startGame();
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
-            }
+        int seat = tableManager.findSeatBySession(session);
+
+        Player removed = tableManager.removePlayer(session);
+
+        // treat leave as fold
+        if (seat >= 0) {
+            gameEngine.handlePlayerLeave(seat);
         }
+
+        // move queue player into seat
+        tableManager.fillSeatsFromQueue();
 
         broadcastTableState();
         broadcastQueuePositions();
+
+        // only start countdown if game not running
+        if (!gameEngine.isGameRunning()) {
+            startCountdownIfReady();
+        }
     }
 
+    // =========================
+    // COUNTDOWN CONTROL
+    // =========================
+    private void startCountdownIfReady() {
+
+        if (!tableManager.shouldStartCountdown()) return;
+
+        if (tableManager.isCountdownRunning()) {
+
+            tableManager.resetCountdown();
+
+        } else {
+
+            tableManager.startCountdown(() -> {
+                try {
+
+                    broadcastCountdown();
+
+                    if (tableManager.getCountdown() == 0) {
+                        gameEngine.startGame();
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+    }
+
+    // =========================
+    // TABLE STATE
+    // =========================
     private void broadcastTableState() throws Exception {
 
         List<String> seats = tableManager.getSeatNames();
@@ -127,8 +162,6 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
                 TableState state = new TableState(seats, player.getSeat());
 
-                //TableState state = new TableState(seats, queue, player.getSeat());
-
                 String json = mapper.writeValueAsString(state);
 
                 player.getSession().sendMessage(new TextMessage(json));
@@ -136,12 +169,16 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
+    // =========================
+    // COUNTDOWN
+    // =========================
     private void broadcastCountdown() throws Exception {
+
         int seconds = tableManager.getCountdown();
 
-        Map<String,Object> msg = new HashMap<>();
-        msg.put("type","game_countdown");
-        msg.put("seconds",seconds);
+        Map<String, Object> msg = new HashMap<>();
+        msg.put("type", "game_countdown");
+        msg.put("seconds", seconds);
 
         String json = mapper.writeValueAsString(msg);
 
@@ -150,10 +187,12 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             if (p != null && p.getSession().isOpen()) {
                 p.getSession().sendMessage(new TextMessage(json));
             }
-
         }
     }
 
+    // =========================
+    // QUEUE POSITIONS
+    // =========================
     private void broadcastQueuePositions() throws Exception {
 
         int position = 1;
@@ -162,8 +201,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
             if (p.getSession().isOpen()) {
 
-                Map<String,Object> msg = new HashMap<>();
-                msg.put("type","table_full");
+                Map<String, Object> msg = new HashMap<>();
+                msg.put("type", "table_full");
                 msg.put("queue", position);
 
                 String json = mapper.writeValueAsString(msg);
@@ -173,5 +212,20 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
             position++;
         }
+    }
+
+    // =========================
+    // SPECTATOR STATE
+    // =========================
+    private void sendSpectatorState(Player spectator) throws Exception {
+
+        Map<String, Object> msg = new HashMap<>();
+
+        msg.put("type", "spectator_mode");
+        msg.put("message", "Game in progress, you are spectating.");
+
+        spectator.getSession().sendMessage(
+                new TextMessage(mapper.writeValueAsString(msg))
+        );
     }
 }

@@ -9,7 +9,7 @@ public class Deck {
     public Deck(){
 
         String[] suits={"H","D","C","S"};
-        String[] ranks={"2","3","4","5","6","7","8","9","T","J","Q","K","A"};
+        String[] ranks={"2","3","4","5","6","7","8","9","10","J","Q","K","A"};
 
         for(String r:ranks)
             for(String s:suits)
