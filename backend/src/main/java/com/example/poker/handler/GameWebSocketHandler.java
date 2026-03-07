@@ -140,8 +140,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             if (p.getSession().isOpen()) {
 
                 Map<String,Object> msg = new HashMap<>();
-                msg.put("type","queue_status");
-                msg.put("position", position);
+                msg.put("type","table_full");
+                msg.put("queue", position);
 
                 String json = mapper.writeValueAsString(msg);
 
