@@ -51,7 +51,7 @@ public class TableManager {
         return null;
     }
 
-    public void removePlayer(WebSocketSession session) {
+    public Player removePlayer(WebSocketSession session) {
 
         waitingQueue.removeIf(p -> 
             p.getSession().getId().equals(session.getId())
@@ -65,8 +65,7 @@ public class TableManager {
 
                 seats.set(i, null);
 
-                seatNextFromQueue(i); // fill empty seat
-                break;
+                return seatNextFromQueue(i); // fill empty seat
             }
 
         }
@@ -74,6 +73,7 @@ public class TableManager {
         if (getPlayerCount() < 2) {
             cancelCountdown();
         }
+        return null;
     }
 
     public Player seatNextFromQueue(int seatIndex) {
@@ -86,7 +86,6 @@ public class TableManager {
 
             seats.set(seatIndex, next);
 
-            resetCountdown();
         }
 
         return next;

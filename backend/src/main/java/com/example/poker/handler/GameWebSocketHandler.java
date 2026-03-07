@@ -76,11 +76,22 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
         SessionManager.remove(session);
 
-        tableManager.removePlayer(session);
+        if (tableManager.removePlayer(session) != null) { //if someone join from queue, reset countdown
+            if (tableManager.isCountdownRunning()) {
+                tableManager.resetCountdown();
+            } else {
+                tableManager.startCountdown(() -> {
+                    try {
+                        broadcastCountdown();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+        }
 
         broadcastTableState();
         broadcastQueuePositions();
-        broadcastCountdown();
     }
 
     private void broadcastTableState() throws Exception {
