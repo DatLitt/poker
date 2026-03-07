@@ -20,7 +20,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
     private static final TableManager tableManager = new TableManager();
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -86,11 +86,15 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
         List<String> seats = tableManager.getSeatNames();
 
+        List<String> queue = tableManager.getQueueNames();
+
         for (Player player : tableManager.getPlayers()) {
 
             if (player != null && player.getSession().isOpen()) {
 
                 TableState state = new TableState(seats, player.getSeat());
+
+                //TableState state = new TableState(seats, queue, player.getSeat());
 
                 String json = mapper.writeValueAsString(state);
 
@@ -100,7 +104,6 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     }
 
     private void broadcastCountdown() throws Exception {
-        System.out.println("dmm");        
         int seconds = tableManager.getCountdown();
 
         Map<String,Object> msg = new HashMap<>();

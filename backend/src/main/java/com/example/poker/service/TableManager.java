@@ -8,6 +8,8 @@ import java.util.concurrent.*;
 
 public class TableManager {
 
+    private final Queue<Player> waitingQueue = new LinkedList<>();
+
     private final int MAX_SEATS = 8;
 
     private final List<Player> seats = new ArrayList<>(Collections.nCopies(MAX_SEATS, null));
@@ -42,17 +44,29 @@ public class TableManager {
             }
         }
 
-        return null;
+        // table full/queue
+        Player player = new Player(name, -1, session);
+        waitingQueue.add(player);
+
+        return player;
     }
 
     public void removePlayer(WebSocketSession session) {
+
+        waitingQueue.removeIf(p -> 
+            p.getSession().getId().equals(session.getId())
+        );
 
         for (int i = 0; i < MAX_SEATS; i++) {
 
             Player p = seats.get(i);
 
             if (p != null && p.getSession().getId().equals(session.getId())) {
+
                 seats.set(i, null);
+
+                seatNextFromQueue(i); // fill empty seat
+                break;
             }
 
         }
@@ -60,6 +74,29 @@ public class TableManager {
         if (getPlayerCount() < 2) {
             cancelCountdown();
         }
+    }
+
+    private void seatNextFromQueue(int seatIndex) {
+
+        Player next = waitingQueue.poll();
+
+        if (next != null) {
+
+            next.setSeat(seatIndex);
+
+            seats.set(seatIndex, next);
+        }
+    }
+
+    public List<String> getQueueNames() {
+
+        List<String> names = new ArrayList<>();
+
+        for (Player p : waitingQueue) {
+            names.add(p.getName());
+        }
+
+        return names;
     }
 
     public boolean shouldStartCountdown() {
