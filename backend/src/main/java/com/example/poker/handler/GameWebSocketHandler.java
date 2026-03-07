@@ -43,12 +43,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 Player player = tableManager.addPlayer(name, session);
 
                 if (player.getSeat() == -1) {
-
-                    Map<String,Object> msg = new HashMap<>();
-                    msg.put("type","queue_status");
-                    msg.put("position", tableManager.getQueuePosition(player));
-
-                    session.sendMessage(new TextMessage(mapper.writeValueAsString(msg)));
+                    broadcastQueuePositions();
                     return;
                 }
 
@@ -84,6 +79,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         tableManager.removePlayer(session);
 
         broadcastTableState();
+        broadcastQueuePositions();
     }
 
     private void broadcastTableState() throws Exception {
@@ -120,6 +116,27 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 p.getSession().sendMessage(new TextMessage(json));
             }
 
+        }
+    }
+
+    private void broadcastQueuePositions() throws Exception {
+
+        int position = 1;
+
+        for (Player p : tableManager.getWaitingQueue()) {
+
+            if (p.getSession().isOpen()) {
+
+                Map<String,Object> msg = new HashMap<>();
+                msg.put("type","queue_status");
+                msg.put("position", position);
+
+                String json = mapper.writeValueAsString(msg);
+
+                p.getSession().sendMessage(new TextMessage(json));
+            }
+
+            position++;
         }
     }
 }

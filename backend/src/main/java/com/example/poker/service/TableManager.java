@@ -76,7 +76,7 @@ public class TableManager {
         }
     }
 
-    private void seatNextFromQueue(int seatIndex) {
+    public Player seatNextFromQueue(int seatIndex) {
 
         Player next = waitingQueue.poll();
 
@@ -86,6 +86,8 @@ public class TableManager {
 
             seats.set(seatIndex, next);
         }
+
+        return next;
     }
 
     public List<String> getQueueNames() {
@@ -113,6 +115,10 @@ public class TableManager {
         }
 
         return -1; // player not found
+    }
+
+    public Queue<Player> getWaitingQueue() {
+        return waitingQueue;
     }
 
     public boolean shouldStartCountdown() {
