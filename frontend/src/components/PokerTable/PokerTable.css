@@ -1,7 +1,7 @@
 .table {
   width: 80dvw;
-  height: 70dvh;
-  border-radius: 50%;
+  height: 60dvh;
+  border-radius: 45%;
   position: relative;
   background-image: url("/table.jpg");
   background-size: cover;
