@@ -6,7 +6,9 @@ export function usePokerSocket(
   setYourSeat: Dispatch<SetStateAction<number>>,
   setTableFull: Dispatch<SetStateAction<boolean>>,
   setCountdown: Dispatch<SetStateAction<number | null>>,
-  setGameState: Dispatch<SetStateAction<"waiting" | "countdown" | "playing">>,
+  setGameState: Dispatch<
+    SetStateAction<"waiting" | "countdown" | "playing" | "spectating">
+  >,
   setPlayerCards: Dispatch<SetStateAction<string[]>>,
 ) {
   useEffect(() => {
@@ -28,9 +30,9 @@ export function usePokerSocket(
           setGameState("countdown");
           console.log("Game starts in", data.seconds, "seconds");
           break;
-        // case "game_start":
-        //   setGameState("playing");
-        //   break;
+        case "spectator_mode":
+          setGameState("spectating");
+          break;
         case "deal_cards":
           setGameState("playing");
           console.log("Your cards:", data.cards);

@@ -23,16 +23,21 @@
   font-size: 1.2rem;
   color: white;
 }
-.player-cards {
+.spectating {
   position: absolute;
-  bottom: 5%;
+  top: 50%;
   left: 50%;
   transform: translateX(-50%);
   font-size: 1.2rem;
   color: white;
-  background: rgba(0, 0, 0, 0.5);
-  padding: 10px 20px;
-  border-radius: 10px;
+}
+.player-cards {
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
 }
 .seat1 {
   top: -80px;

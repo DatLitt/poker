@@ -2,6 +2,7 @@ import Seat from "../Seat/Seat";
 import { usePokerSocket } from "../../hooks/usePokerSocket";
 import "./PokerTable.css";
 import { useState } from "react";
+import Card from "../Card/Card";
 
 export default function PokerTable() {
   const [yourId, setYourId] = useState(1); //user's seat before rotate
@@ -9,7 +10,7 @@ export default function PokerTable() {
   const [tableFull, setTableFull] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [gameState, setGameState] = useState<
-    "waiting" | "countdown" | "playing"
+    "waiting" | "countdown" | "playing" | "spectating"
   >("waiting");
   const [playerCards, setPlayerCards] = useState<string[]>([]);
   usePokerSocket(
@@ -47,8 +48,14 @@ export default function PokerTable() {
         displaySeats.map((player, i) => (
           <Seat key={i} player={player} className={`seat seat${i + 1}`} />
         ))}
+      {gameState === "spectating" && (
+        <div className="spectating">You are spectating</div>
+      )}
       {gameState === "playing" && (
-        <div className="player-cards">Your Cards: {playerCards.join(", ")}</div>
+        <div className="player-cards">
+          <Card cardName={playerCards[0]} />
+          <Card cardName={playerCards[1]} />
+        </div>
       )}
     </div>
   );
