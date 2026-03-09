@@ -4,6 +4,7 @@ import "./PokerTable.css";
 import { useState } from "react";
 import Card from "../Card/Card";
 import CommunityCards from "../CommunityCards/CommunityCards";
+import ActionButtons from "../ActionButtons/ActionButtons";
 
 export default function PokerTable() {
   const [yourId, setYourId] = useState(1); //user's seat before rotate
@@ -21,6 +22,12 @@ export default function PokerTable() {
     "JD",
     null,
   ]);
+  const [actionAllowed, setActionAllowed] = useState<string[]>([
+    "fold",
+    "check",
+    "call",
+    // "raise",
+  ]);
   usePokerSocket(
     setSeats,
     setYourId,
@@ -29,6 +36,7 @@ export default function PokerTable() {
     setGameState,
     setPlayerCards,
     setCommunityCards,
+    setActionAllowed,
   );
 
   function rotateSeats(seats: (string | null)[], yourId: number) {
@@ -67,6 +75,9 @@ export default function PokerTable() {
         </div>
       )}
       {gameState === "playing" && <CommunityCards cards={communityCards} />}
+      {gameState === "playing" && (
+        <ActionButtons actionAllowed={actionAllowed} />
+      )}
     </div>
   );
 }

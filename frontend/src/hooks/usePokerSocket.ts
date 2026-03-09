@@ -11,6 +11,7 @@ export function usePokerSocket(
   >,
   setPlayerCards: Dispatch<SetStateAction<string[]>>,
   setCommunityCards: Dispatch<SetStateAction<(string | null)[]>>,
+  setActionAllowed: Dispatch<SetStateAction<string[]>>,
 ) {
   useEffect(() => {
     const handler = (event: MessageEvent) => {
@@ -41,6 +42,9 @@ export function usePokerSocket(
           break;
         case "community_cards":
           setCommunityCards(data.cards);
+          break;
+        case "player_turn":
+          setActionAllowed(data.actions);
           break;
         default:
           console.warn("Unknown message type:", data.type);
