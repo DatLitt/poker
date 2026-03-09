@@ -2,7 +2,7 @@ import "./CommunityCards.css";
 import Card from "../Card/Card";
 
 interface CommunityCardsProps {
-  cards: string[];
+  cards: (string | null)[];
 }
 
 function CommunityCards({ cards }: CommunityCardsProps) {

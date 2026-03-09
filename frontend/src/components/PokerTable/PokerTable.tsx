@@ -14,12 +14,12 @@ export default function PokerTable() {
     "waiting" | "countdown" | "playing" | "spectating"
   >("waiting");
   const [playerCards, setPlayerCards] = useState<string[]>([]);
-  const [communityCards, setCommunityCards] = useState<string[]>([
+  const [communityCards, setCommunityCards] = useState<(string | null)[]>([
     "AH",
     "KD",
     "5C",
     "JD",
-    "3S",
+    null,
   ]);
   usePokerSocket(
     setSeats,

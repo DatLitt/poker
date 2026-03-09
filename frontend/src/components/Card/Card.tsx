@@ -1,9 +1,10 @@
 import "./Card.css";
 
-const Card = ({ cardName }: { cardName: string }) => {
+const Card = ({ cardName }: { cardName: string | null }) => {
+  const src = cardName ? `/${cardName}.png` : "/Back.png";
   return (
     <div className="card">
-      <img src={`/${cardName}.png`} alt={cardName} />
+      <img src={src} alt={cardName ?? "cardback"} />
     </div>
   );
 };

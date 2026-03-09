@@ -10,7 +10,7 @@ export function usePokerSocket(
     SetStateAction<"waiting" | "countdown" | "playing" | "spectating">
   >,
   setPlayerCards: Dispatch<SetStateAction<string[]>>,
-  setCommunityCards: Dispatch<SetStateAction<string[]>>,
+  setCommunityCards: Dispatch<SetStateAction<(string | null)[]>>,
 ) {
   useEffect(() => {
     const handler = (event: MessageEvent) => {
