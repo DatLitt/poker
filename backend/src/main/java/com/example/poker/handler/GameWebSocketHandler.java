@@ -84,10 +84,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 int seat = tableManager.findSeatBySession(session);
 
                 if (seat >= 0) {
-                    gameEngine.handlePlayerLeave(seat);
+                    gameEngine.handleAction(seat, action, amount);
                 }
-
-                Player removed = tableManager.removePlayer(session);
             }
 
         } catch (Exception e) {
@@ -105,7 +103,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
         int seat = tableManager.findSeatBySession(session);
 
-        Player removed = tableManager.removePlayer(session);
+        tableManager.removePlayer(session);
 
         gameEngine.handleTableEmpty();
 
@@ -166,7 +164,12 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
             if (player != null && player.getSession().isOpen()) {
 
-                TableState state = new TableState(seats, player.getSeat());
+                TableState state = new TableState(
+                        seats,
+                        player.getSeat(),
+                        gameEngine.getPot(),
+                        gameEngine.getCurrentBet()
+                );
 
                 String json = mapper.writeValueAsString(state);
 

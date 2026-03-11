@@ -7,10 +7,14 @@ public class TableState {
     private String type = "table_state";
     private List<String> seats;
     private int yourSeat;
+    private int pot;
+    private int currentBet;
 
-    public TableState(List<String> seats2, int yourSeat) {
+    public TableState(List<String> seats2, int yourSeat, int pot, int currentBet) {
         this.seats = seats2;
         this.yourSeat = yourSeat;
+        this.pot = pot;
+        this.currentBet = currentBet;
     }
 
     public String getType() {
@@ -23,5 +27,13 @@ public class TableState {
 
     public int getYourSeat() {
         return yourSeat;
+    }
+
+    public int getPot() {
+        return pot;
+    }
+
+    public int getCurrentBet() {
+        return currentBet;
     }
 }
