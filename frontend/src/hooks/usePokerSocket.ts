@@ -47,6 +47,7 @@ export function usePokerSocket(
           break;
         case "player_turn":
           setActionAllowed(data.actions);
+          SetPot(data.pot);
           break;
         default:
           console.warn("Unknown message type:", data.type);
