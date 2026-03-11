@@ -19,8 +19,8 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 @Component
 public class GameWebSocketHandler extends TextWebSocketHandler {
 
-    private static final TableManager tableManager = new TableManager();
-    private static final GameEngine gameEngine = new GameEngine(tableManager);
+    private final TableManager tableManager = new TableManager();
+    private final GameEngine gameEngine = new GameEngine(tableManager, this::onGameEnded);
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -150,6 +150,16 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                     e.printStackTrace();
                 }
             });
+        }
+    }
+
+    private void onGameEnded() {
+        try {
+            broadcastTableState();
+            broadcastQueuePositions();
+            startCountdownIfReady();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

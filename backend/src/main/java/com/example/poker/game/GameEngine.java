@@ -14,6 +14,7 @@ public class GameEngine {
     private Deck deck;
 
     private final TableManager table;
+    private final Runnable onGameEnd;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -29,8 +30,15 @@ public class GameEngine {
 
     private final int bigBlind = 20;
 
-    public GameEngine(TableManager table) {
+    private final int startingChips = 1000;
+
+    private int dealerSeat = 0;
+
+    private int minRaiseAmount = 0;
+
+    public GameEngine(TableManager table, Runnable onGameEnd) {
         this.table = table;
+        this.onGameEnd = onGameEnd;
     }
 
     // ---------- GAME START ----------
@@ -70,20 +78,32 @@ public class GameEngine {
             }
         }
 
+        // rotate dealer button
+        dealerSeat = (dealerSeat + 1) % table.getPlayers().size();
+        
+        // find next active player for small blind
+        int sbSeat = findNextSeat(dealerSeat);
+        int bbSeat = findNextSeat(sbSeat);
+        
         // post blinds
-        Player sb = table.getPlayers().get(0);
-        if (sb != null && sb.getChips() >= smallBlind) {
-            sb.setChips(sb.getChips() - smallBlind);
-            sb.setCurrentBet(smallBlind);
-            pot += smallBlind;
+        if (sbSeat >= 0) {
+            Player sb = table.getPlayers().get(sbSeat);
+            if (sb != null && sb.getChips() >= smallBlind) {
+                sb.setChips(sb.getChips() - smallBlind);
+                sb.setCurrentBet(smallBlind);
+                pot += smallBlind;
+            }
         }
-        Player bb = table.getPlayers().get(1);
-        if (bb != null && bb.getChips() >= bigBlind) {
-            bb.setChips(bb.getChips() - bigBlind);
-            bb.setCurrentBet(bigBlind);
-            pot += bigBlind;
+        if (bbSeat >= 0) {
+            Player bb = table.getPlayers().get(bbSeat);
+            if (bb != null && bb.getChips() >= bigBlind) {
+                bb.setChips(bb.getChips() - bigBlind);
+                bb.setCurrentBet(bigBlind);
+                pot += bigBlind;
+            }
         }
         currentBet = bigBlind;
+        minRaiseAmount = bigBlind;
 
         startBettingRound();
     }
@@ -91,13 +111,27 @@ public class GameEngine {
     // ---------- BETTING ROUND ----------
     private void startBettingRound() throws Exception {
 
+        if (!hasActivePlayerWhoCanAct()) {
+            fastForwardToShowdown();
+            return;
+        }
+
         for (Player p : table.getPlayers()) {
-            if (p != null && !p.isFolded()) {
+            if (p == null || p.isFolded()) continue;
+            if (p.isAllIn() || p.getChips() <= 0) {
+                p.setActed(true);
+            } else {
                 p.setActed(false);
             }
         }
 
-        currentTurn = findNextSeat(1); // start after BB
+        // On PREFLOP: action starts after big blind
+        // On other streets: action starts after dealer (small blind position)
+        if (state == GameState.PREFLOP) {
+            currentTurn = findNextSeat(findNextSeat(dealerSeat)); // dealer → SB → BB → UTG(current)
+        } else {
+            currentTurn = findNextSeat(dealerSeat); // dealer → SB(current)
+        }
 
         if (currentTurn == -1) {
             nextStage();
@@ -136,9 +170,27 @@ public class GameEngine {
 
         msg.put("type", "player_turn");
         msg.put("seat", currentTurn);
-        msg.put("allowedActions", List.of("fold", "call", "raise", "all_in"));
+        
+        // determine allowed actions
+        Player currentPlayer = table.getPlayers().get(currentTurn);
+        List<String> actions = new ArrayList<>();
+        actions.add("fold");
+        
+        if (currentBet > currentPlayer.getCurrentBet()) {
+            actions.add("call");
+        } else {
+            actions.add("check");
+        }
+        
+        if (currentPlayer.getChips() > 0) {
+            actions.add("raise");
+            actions.add("all_in");
+        }
+        
+        msg.put("allowedActions", actions);
         msg.put("pot", pot);
         msg.put("currentBet", currentBet);
+        msg.put("dealerSeat", dealerSeat);
 
         broadcast(msg);
     }
@@ -155,6 +207,12 @@ public class GameEngine {
         switch (action) {
             case "fold":
                 p.setFolded(true);
+                p.setActed(true);
+                break;
+
+            case "check":
+                // only valid if no bet to call
+                if (currentBet > p.getCurrentBet()) return;
                 p.setActed(true);
                 break;
 
@@ -176,13 +234,18 @@ public class GameEngine {
                 break;
 
             case "raise":
-                if (amount == null || amount <= currentBet) return;
+                if (amount == null || amount <= 0) return;
+                // total amount to call + minimum raise
+                int totalNeeded = currentBet - p.getCurrentBet() + minRaiseAmount;
+                if (amount < totalNeeded || amount > (p.getCurrentBet() + p.getChips())) return;
+                
                 int raiseAmount = amount - p.getCurrentBet();
-                if (raiseAmount > p.getChips() || raiseAmount <= 0) return;
                 pot += raiseAmount;
                 p.setChips(p.getChips() - raiseAmount);
-                p.setCurrentBet(amount);
+                minRaiseAmount = amount - currentBet; // new minimum raise size
                 currentBet = amount;
+                p.setCurrentBet(amount);
+                
                 // reset acted for others
                 for (Player other : table.getPlayers()) {
                     if (other != null && !other.isFolded() && !other.isAllIn() && other != p) {
@@ -193,13 +256,19 @@ public class GameEngine {
                 break;
 
             case "all_in":
+                if (p.getChips() == 0) return;
                 int allInAmount = p.getChips();
+                int allInTotal = p.getCurrentBet() + allInAmount;
+                
                 pot += allInAmount;
                 p.setChips(0);
                 p.setAllIn(true);
-                p.setCurrentBet(p.getCurrentBet() + allInAmount);
-                if (p.getCurrentBet() > currentBet) {
-                    currentBet = p.getCurrentBet();
+                p.setCurrentBet(allInTotal);
+                
+                // if all-in is more than current bet, it counts as a raise
+                if (allInTotal > currentBet) {
+                    minRaiseAmount = allInTotal - currentBet;
+                    currentBet = allInTotal;
                     // reset acted for others
                     for (Player other : table.getPlayers()) {
                         if (other != null && !other.isFolded() && !other.isAllIn() && other != p) {
@@ -211,7 +280,9 @@ public class GameEngine {
                 break;
         }
 
-        checkWin();
+        if (checkWin()) {
+            return;
+        }
         nextTurn();
     }
 
@@ -264,9 +335,46 @@ public class GameEngine {
             return;
         }
 
+        currentBet = 0;
+        minRaiseAmount = bigBlind;
         broadcastCommunity();
 
         startBettingRound();
+    }
+
+    private boolean hasActivePlayerWhoCanAct() {
+        for (Player p : table.getPlayers()) {
+            if (p == null || p.isFolded()) continue;
+            if (!p.isAllIn() && p.getChips() > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void fastForwardToShowdown() throws Exception {
+        while (state != GameState.RIVER) {
+            if (state == GameState.PREFLOP) {
+                state = GameState.FLOP;
+                community.add(deck.draw());
+                community.add(deck.draw());
+                community.add(deck.draw());
+            } else if (state == GameState.FLOP) {
+                state = GameState.TURN;
+                community.add(deck.draw());
+            } else if (state == GameState.TURN) {
+                state = GameState.RIVER;
+                community.add(deck.draw());
+            } else {
+                break;
+            }
+
+            currentBet = 0;
+            minRaiseAmount = bigBlind;
+            broadcastCommunity();
+        }
+
+        showdown();
     }
 
     private boolean isRoundComplete() {
@@ -293,7 +401,7 @@ public class GameEngine {
     }
 
     // ---------- WIN CHECK ----------
-    private void checkWin() throws Exception {
+    private boolean checkWin() throws Exception {
 
         List<Player> active = new ArrayList<>();
 
@@ -312,7 +420,9 @@ public class GameEngine {
             broadcast(msg);
 
             finishGame();
+            return true;
         }
+        return false;
     }
 
     // ---------- SHOWDOWN ----------
@@ -341,15 +451,36 @@ public class GameEngine {
 
         state = GameState.WAITING;
         pot = 0;
+        currentBet = 0;
+        minRaiseAmount = bigBlind;
 
         community.clear();
 
         currentTurn = -1;
 
+        moveBrokePlayersToQueue();
+
         table.fillSeatsFromQueue();
 
-        if (table.getPlayerCount() >= 2) {
-            startGame();
+        if (onGameEnd != null) {
+            onGameEnd.run();
+        }
+    }
+
+    private void moveBrokePlayersToQueue() {
+        List<Player> players = table.getPlayers();
+        Queue<Player> queue = table.getWaitingQueue();
+
+        for (int i = 0; i < players.size(); i++) {
+            Player p = players.get(i);
+            if (p == null) continue;
+            if (p.getChips() > 0) continue;
+
+            players.set(i, null);
+            p.resetForRound();
+            p.setChips(startingChips);
+            p.setSeat(-1);
+            queue.add(p);
         }
     }
 
@@ -414,5 +545,19 @@ public class GameEngine {
 
     public int getCurrentBet() {
         return currentBet;
+    }
+
+    public int getDealerSeat() {
+        return dealerSeat;
+    }
+
+    // ---------- STATE RESET ----------
+    public void reset() {
+        state = GameState.WAITING;
+        pot = 0;
+        currentBet = 0;
+        currentTurn = -1;
+        minRaiseAmount = bigBlind;
+        community.clear();
     }
 }
