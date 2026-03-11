@@ -83,7 +83,11 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
                 int seat = tableManager.findSeatBySession(session);
 
-                gameEngine.handleAction(seat, action, amount);
+                if (seat >= 0) {
+                    gameEngine.handlePlayerLeave(seat);
+                }
+
+                Player removed = tableManager.removePlayer(session);
             }
 
         } catch (Exception e) {
@@ -102,6 +106,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         int seat = tableManager.findSeatBySession(session);
 
         Player removed = tableManager.removePlayer(session);
+
+        gameEngine.handleTableEmpty();
 
         // treat leave as fold
         if (seat >= 0) {

@@ -214,14 +214,12 @@ public class GameEngine {
                 active.add(p);
         }
 
-        if (active.size() == 1) {
+        if(active.size() <= 1){
+            Player winner = active.size()==1 ? active.get(0) : null;
 
-            Player winner = active.get(0);
-
-            Map<String, Object> msg = new HashMap<>();
-
-            msg.put("type", "game_win");
-            msg.put("seat", winner.getSeat());
+            Map<String,Object> msg = new HashMap<>();
+            msg.put("type","game_win");
+            msg.put("seat", winner != null ? winner.getSeat() : -1);
 
             broadcast(msg);
 
@@ -255,9 +253,13 @@ public class GameEngine {
 
         state = GameState.WAITING;
 
+        community.clear();
+
+        currentTurn = -1;
+
         table.fillSeatsFromQueue();
 
-        if (table.getActivePlayerCount() >= 2) {
+        if (table.getPlayerCount() >= 2) {
             startGame();
         }
     }
@@ -295,6 +297,19 @@ public class GameEngine {
             if (s.getSession().isOpen()) {
                 s.getSession().sendMessage(new TextMessage(json));
             }
+        }
+    }
+
+    // ---------- EMPTY TABLE ---------
+    public void handleTableEmpty() {
+
+        if (table.getPlayerCount() == 0) {
+
+            state = GameState.WAITING;
+
+            community.clear();
+
+            currentTurn = -1;
         }
     }
 
