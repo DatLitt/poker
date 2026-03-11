@@ -2,11 +2,16 @@ import { useState } from "react";
 import { socket } from "../../socket/socket";
 import "./ActionButtons.css";
 
+type PlayerActionMessage = {
+  type: "player_action";
+  action: "fold" | "check" | "call" | "raise" | "all_in";
+  amount?: number;
+};
 function ActionButtons({ actionAllowed }: { actionAllowed: string[] }) {
   const [raiseAmount, setRaiseAmount] = useState(0);
 
-  function sendAction(action: string) {
-    const message: any = {
+  function sendAction(action: "fold" | "check" | "call" | "raise" | "all_in") {
+    const message: PlayerActionMessage = {
       type: "player_action",
       action: action,
     };
