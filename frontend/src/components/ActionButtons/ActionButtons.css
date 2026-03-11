@@ -1,0 +1,30 @@
+.actionButtons {
+  display: flex;
+  justify-content: center;
+  position: fixed;
+  gap: 10px;
+  bottom: 20px;
+  width: 100%;
+  border: 1px solid red;
+  width: fit-content;
+  height: fit-content;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.actionButtons button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  height: 60px;
+  width: 80px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 16px;
+}
+.actionButtons button:hover {
+  background-color: #0056b3;
+}
+.actionButtons button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
