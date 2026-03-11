@@ -82,7 +82,7 @@ export default function PokerTable() {
           />
           <Pot amount={pot} />
           {playerTurn !== null && (
-            <div className="player-turn">Player {playerTurn + 1}'s turn</div>
+            <div className="player-turn">{seats[playerTurn]}'s turn</div>
           )}
           {winner !== null && (
             <div className="winner">{seats[winner]} wins!</div>
