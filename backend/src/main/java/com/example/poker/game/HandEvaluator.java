@@ -14,18 +14,32 @@ public final class HandEvaluator {
     }
 
     public static Player determineWinner(List<Player> players, List<String> community) {
-        Player bestPlayer = null;
+        List<Player> winners = determineWinners(players, community);
+        return winners.isEmpty() ? null : winners.get(0);
+    }
+
+    public static List<Player> determineWinners(List<Player> players, List<String> community) {
+        List<Player> winners = new ArrayList<>();
         HandValue bestValue = null;
 
         for (Player p : players) {
             HandValue value = evaluate(p.getCards(), community);
             if (bestValue == null || value.compareTo(bestValue) > 0) {
                 bestValue = value;
-                bestPlayer = p;
+                winners.clear();
+                winners.add(p);
+            } else if (value.compareTo(bestValue) == 0) {
+                winners.add(p);
             }
         }
 
-        return bestPlayer;
+        return winners;
+    }
+
+    public static int compareHands(List<String> holeA, List<String> holeB, List<String> community) {
+        HandValue a = evaluate(holeA, community);
+        HandValue b = evaluate(holeB, community);
+        return a.compareTo(b);
     }
 
     public static HandValue evaluate(List<String> holeCards, List<String> community) {

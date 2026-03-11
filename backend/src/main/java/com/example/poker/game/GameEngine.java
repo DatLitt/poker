@@ -283,6 +283,10 @@ public class GameEngine {
         if (checkWin()) {
             return;
         }
+        if (isRoundComplete()) {
+            nextStage();
+            return;
+        }
         nextTurn();
     }
 
@@ -435,12 +439,20 @@ public class GameEngine {
             }
         }
 
-        Player winner = active.isEmpty() ? null : HandEvaluator.determineWinner(active, community);
+        List<Player> winners = active.isEmpty()
+                ? new ArrayList<>()
+                : HandEvaluator.determineWinners(active, community);
+        Player winner = winners.isEmpty() ? null : winners.get(0);
 
         Map<String, Object> msg = new HashMap<>();
 
         msg.put("type", "showdown");
         msg.put("winnerSeat", winner != null ? winner.getSeat() : -1);
+        List<Integer> winnerSeats = new ArrayList<>();
+        for (Player p : winners) {
+            winnerSeats.add(p.getSeat());
+        }
+        msg.put("winnerSeats", winnerSeats);
         msg.put("community", community);
 
         broadcast(msg);
@@ -450,8 +462,6 @@ public class GameEngine {
 
     // ---------- GAME END ----------
     private void finishGame() throws Exception {
-
-        Thread.sleep(5000); // wait 5 seconds before resetting for next game
 
         state = GameState.WAITING;
         pot = 0;
