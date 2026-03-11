@@ -314,6 +314,7 @@ public class GameEngine {
 
             state = GameState.FLOP;
             currentBet = 0;
+            resetBetsForNewStreet();
 
             community.add(deck.draw());
             community.add(deck.draw());
@@ -323,6 +324,7 @@ public class GameEngine {
 
             state = GameState.TURN;
             currentBet = 0;
+            resetBetsForNewStreet();
 
             community.add(deck.draw());
 
@@ -330,6 +332,7 @@ public class GameEngine {
 
             state = GameState.RIVER;
             currentBet = 0;
+            resetBetsForNewStreet();
 
             community.add(deck.draw());
 
@@ -344,6 +347,14 @@ public class GameEngine {
         broadcastCommunity();
 
         startBettingRound();
+    }
+
+    private void resetBetsForNewStreet() {
+        for (Player p : table.getPlayers()) {
+            if (p != null) {
+                p.setCurrentBet(0);
+            }
+        }
     }
 
     private boolean hasActivePlayerWhoCanAct() {
