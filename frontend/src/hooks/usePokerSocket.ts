@@ -12,6 +12,7 @@ export function usePokerSocket(
   setPlayerCards: Dispatch<SetStateAction<string[]>>,
   setCommunityCards: Dispatch<SetStateAction<(string | null)[]>>,
   setActionAllowed: Dispatch<SetStateAction<string[]>>,
+  SetPot: Dispatch<SetStateAction<number>>,
 ) {
   useEffect(() => {
     const handler = (event: MessageEvent) => {
@@ -23,6 +24,7 @@ export function usePokerSocket(
           setSeats(data.seats);
           setYourSeat(data.yourSeat);
           setTableFull(false);
+          SetPot(data.pot);
           break;
         case "table_full":
           setTableFull(true);

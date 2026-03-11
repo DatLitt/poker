@@ -5,10 +5,12 @@ import { useState } from "react";
 import Card from "../Card/Card";
 import CommunityCards from "../CommunityCards/CommunityCards";
 import ActionButtons from "../ActionButtons/ActionButtons";
+import Pot from "../Pot/Pot";
 
 export default function PokerTable() {
   const [yourId, setYourId] = useState(1); //user's seat before rotate
   const [seats, setSeats] = useState<(string | null)[]>(Array(8).fill(null));
+  const [pot, setPot] = useState(0);
   const [tableFull, setTableFull] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [gameState, setGameState] = useState<
@@ -32,6 +34,7 @@ export default function PokerTable() {
     setPlayerCards,
     setCommunityCards,
     setActionAllowed,
+    setPot,
   );
 
   function rotateSeats(seats: (string | null)[], yourId: number) {
@@ -64,14 +67,15 @@ export default function PokerTable() {
         <div className="spectating">You are spectating</div>
       )}
       {gameState === "playing" && (
-        <div className="player-cards">
-          <Card cardName={playerCards[0]} />
-          <Card cardName={playerCards[1]} />
-        </div>
-      )}
-      {gameState === "playing" && <CommunityCards cards={communityCards} />}
-      {gameState === "playing" && (
-        <ActionButtons actionAllowed={actionAllowed} />
+        <>
+          <div className="player-cards">
+            <Card cardName={playerCards[0]} />
+            <Card cardName={playerCards[1]} />
+          </div>
+          <CommunityCards cards={communityCards} />
+          <ActionButtons actionAllowed={actionAllowed} />
+          <Pot amount={pot} />
+        </>
       )}
     </div>
   );
