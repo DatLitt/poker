@@ -14,6 +14,7 @@ export function usePokerSocket(
   setActionAllowed: Dispatch<SetStateAction<string[]>>,
   SetPot: Dispatch<SetStateAction<number>>,
   setPlayerTurn: Dispatch<SetStateAction<number | null>>,
+  setWinner: Dispatch<SetStateAction<number | null>>,
 ) {
   useEffect(() => {
     const handler = (event: MessageEvent) => {
@@ -25,6 +26,7 @@ export function usePokerSocket(
           setSeats(data.seats);
           setYourSeat(data.yourSeat);
           setTableFull(false);
+          setCommunityCards([null, null, null, null, null]);
           SetPot(data.pot);
           break;
         case "table_full":
@@ -40,6 +42,7 @@ export function usePokerSocket(
           break;
         case "deal_cards":
           setGameState("playing");
+
           console.log("Your cards:", data.cards);
           setPlayerCards(data.cards);
           break;
@@ -50,6 +53,10 @@ export function usePokerSocket(
           setPlayerTurn(data.seat);
           setActionAllowed(data.allowedActions);
           SetPot(data.pot);
+          break;
+        case "showdown":
+          setPlayerTurn(null);
+          setWinner(data.winnerSeat);
           break;
         default:
           console.warn("Unknown message type:", data.type);
