@@ -428,12 +428,14 @@ public class GameEngine {
     // ---------- SHOWDOWN ----------
     private void showdown() throws Exception {
 
-        Player winner = null;
-
+        List<Player> active = new ArrayList<>();
         for (Player p : table.getPlayers()) {
-            if (p != null && !p.isFolded())
-                winner = p;
+            if (p != null && !p.isFolded()) {
+                active.add(p);
+            }
         }
+
+        Player winner = active.isEmpty() ? null : HandEvaluator.determineWinner(active, community);
 
         Map<String, Object> msg = new HashMap<>();
 
@@ -448,6 +450,8 @@ public class GameEngine {
 
     // ---------- GAME END ----------
     private void finishGame() throws Exception {
+
+        Thread.sleep(5000); // wait 5 seconds before resetting for next game
 
         state = GameState.WAITING;
         pot = 0;
