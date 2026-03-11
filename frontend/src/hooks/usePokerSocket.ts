@@ -55,6 +55,7 @@ export function usePokerSocket(
           SetPot(data.pot);
           break;
         case "showdown":
+          setPlayerTurn(null);
           setWinner(data.winnerSeat);
           break;
         default:
