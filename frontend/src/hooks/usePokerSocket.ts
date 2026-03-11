@@ -13,6 +13,7 @@ export function usePokerSocket(
   setCommunityCards: Dispatch<SetStateAction<(string | null)[]>>,
   setActionAllowed: Dispatch<SetStateAction<string[]>>,
   SetPot: Dispatch<SetStateAction<number>>,
+  setPlayerTurn: Dispatch<SetStateAction<number | null>>,
 ) {
   useEffect(() => {
     const handler = (event: MessageEvent) => {
@@ -46,7 +47,8 @@ export function usePokerSocket(
           setCommunityCards(data.cards);
           break;
         case "player_turn":
-          setActionAllowed(data.actions);
+          setPlayerTurn(data.seat);
+          setActionAllowed(data.allowedActions);
           SetPot(data.pot);
           break;
         default:

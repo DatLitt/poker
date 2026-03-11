@@ -25,6 +25,7 @@ export default function PokerTable() {
     null,
   ]);
   const [actionAllowed, setActionAllowed] = useState<string[]>([]);
+  const [playerTurn, setPlayerTurn] = useState<number | null>(null);
   usePokerSocket(
     setSeats,
     setYourId,
@@ -35,6 +36,7 @@ export default function PokerTable() {
     setCommunityCards,
     setActionAllowed,
     setPot,
+    setPlayerTurn,
   );
 
   function rotateSeats(seats: (string | null)[], yourId: number) {
@@ -73,8 +75,13 @@ export default function PokerTable() {
             <Card cardName={playerCards[1]} />
           </div>
           <CommunityCards cards={communityCards} />
-          <ActionButtons actionAllowed={actionAllowed} />
+          <ActionButtons
+            actionAllowed={playerTurn === yourId ? actionAllowed : []}
+          />
           <Pot amount={pot} />
+          {playerTurn !== null && (
+            <div className="player-turn">Player {playerTurn + 1}'s turn</div>
+          )}
         </>
       )}
     </div>
