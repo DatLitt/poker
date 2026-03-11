@@ -16,18 +16,13 @@ export default function PokerTable() {
   >("waiting");
   const [playerCards, setPlayerCards] = useState<string[]>([]);
   const [communityCards, setCommunityCards] = useState<(string | null)[]>([
-    "AH",
-    "KD",
-    "5C",
-    "JD",
+    null,
+    null,
+    null,
+    null,
     null,
   ]);
-  const [actionAllowed, setActionAllowed] = useState<string[]>([
-    "fold",
-    "check",
-    "call",
-    // "raise",
-  ]);
+  const [actionAllowed, setActionAllowed] = useState<string[]>([]);
   usePokerSocket(
     setSeats,
     setYourId,
