@@ -419,7 +419,7 @@ public class GameEngine {
 
             broadcast(msg);
 
-            finishGame();
+            //finishGame();
             return true;
         }
         return false;
@@ -445,7 +445,7 @@ public class GameEngine {
 
         broadcast(msg);
 
-        finishGame();
+        //finishGame();
     }
 
     // ---------- GAME END ----------
