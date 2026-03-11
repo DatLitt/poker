@@ -25,6 +25,7 @@ export function usePokerSocket(
           setSeats(data.seats);
           setYourSeat(data.yourSeat);
           setTableFull(false);
+          setCommunityCards([null, null, null, null, null]);
           SetPot(data.pot);
           break;
         case "table_full":
@@ -40,6 +41,7 @@ export function usePokerSocket(
           break;
         case "deal_cards":
           setGameState("playing");
+
           console.log("Your cards:", data.cards);
           setPlayerCards(data.cards);
           break;
