@@ -85,25 +85,35 @@ public class GameEngine {
         int sbSeat = findNextSeat(dealerSeat);
         int bbSeat = findNextSeat(sbSeat);
         
-        // post blinds
+        // post blinds (allow short stacks to post all-in)
+        int sbPosted = 0;
         if (sbSeat >= 0) {
             Player sb = table.getPlayers().get(sbSeat);
-            if (sb != null && sb.getChips() >= smallBlind) {
-                sb.setChips(sb.getChips() - smallBlind);
-                sb.setCurrentBet(smallBlind);
-                pot += smallBlind;
+            if (sb != null && sb.getChips() > 0) {
+                sbPosted = Math.min(smallBlind, sb.getChips());
+                sb.setChips(sb.getChips() - sbPosted);
+                sb.setCurrentBet(sbPosted);
+                if (sb.getChips() == 0) {
+                    sb.setAllIn(true);
+                }
+                pot += sbPosted;
             }
         }
+        int bbPosted = 0;
         if (bbSeat >= 0) {
             Player bb = table.getPlayers().get(bbSeat);
-            if (bb != null && bb.getChips() >= bigBlind) {
-                bb.setChips(bb.getChips() - bigBlind);
-                bb.setCurrentBet(bigBlind);
-                pot += bigBlind;
+            if (bb != null && bb.getChips() > 0) {
+                bbPosted = Math.min(bigBlind, bb.getChips());
+                bb.setChips(bb.getChips() - bbPosted);
+                bb.setCurrentBet(bbPosted);
+                if (bb.getChips() == 0) {
+                    bb.setAllIn(true);
+                }
+                pot += bbPosted;
             }
         }
-        currentBet = bigBlind;
-        minRaiseAmount = bigBlind;
+        currentBet = Math.max(sbPosted, bbPosted);
+        minRaiseAmount = currentBet > 0 ? currentBet : bigBlind;
 
         startBettingRound();
     }
@@ -235,16 +245,22 @@ public class GameEngine {
 
             case "raise":
                 if (amount == null || amount <= 0) return;
-                // total amount to call + minimum raise
-                int totalNeeded = currentBet - p.getCurrentBet() + minRaiseAmount;
-                if (amount < totalNeeded || amount > (p.getCurrentBet() + p.getChips())) return;
-                
-                int raiseAmount = amount - p.getCurrentBet();
-                pot += raiseAmount;
-                p.setChips(p.getChips() - raiseAmount);
-                minRaiseAmount = amount - currentBet; // new minimum raise size
-                currentBet = amount;
-                p.setCurrentBet(amount);
+                // treat amount as raise size (increment over current bet)
+                int raiseSize = amount;
+                if (raiseSize < minRaiseAmount) return;
+
+                int newBet = currentBet + raiseSize;
+                int totalToPut = newBet - p.getCurrentBet();
+                if (totalToPut <= 0 || totalToPut > p.getChips()) return;
+
+                pot += totalToPut;
+                p.setChips(p.getChips() - totalToPut);
+                if (p.getChips() == 0) {
+                    p.setAllIn(true);
+                }
+                p.setCurrentBet(newBet);
+                minRaiseAmount = raiseSize;
+                currentBet = newBet;
                 
                 // reset acted for others
                 for (Player other : table.getPlayers()) {
