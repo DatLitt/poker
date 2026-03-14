@@ -8,6 +8,7 @@ import com.example.poker.service.TableManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,10 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     private final GameEngine gameEngine = new GameEngine(tableManager, this::onGameEnded);
 
     private final ObjectMapper mapper = new ObjectMapper();
+
+    private List<String> lastHandSeatIds = new ArrayList<>();
+
+    private volatile boolean tableChangedSinceLastHand = true;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -43,6 +48,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             if ("join_table".equals(type)) {
 
                 String name = json.get("name").asText();
+
+                tableChangedSinceLastHand = true;
 
                 Player player;
 
@@ -101,6 +108,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
         SessionManager.remove(session);
 
+        tableChangedSinceLastHand = true;
+
         int seat = tableManager.findSeatBySession(session);
 
         tableManager.removePlayer(session);
@@ -152,6 +161,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                     broadcastCountdown();
 
                     if (tableManager.getCountdown() == 0) {
+                        markHandStartSnapshot();
                         gameEngine.startGame();
                     }
 
@@ -166,10 +176,37 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         try {
             broadcastTableState();
             broadcastQueuePositions();
-            startCountdownIfReady();
+
+            if (shouldAutoStartNextHand()) {
+                markHandStartSnapshot();
+                gameEngine.startGame();
+            } else {
+                startCountdownIfReady();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void markHandStartSnapshot() {
+        lastHandSeatIds = getSeatSessionIds();
+        tableChangedSinceLastHand = false;
+    }
+
+    private List<String> getSeatSessionIds() {
+        List<String> ids = new ArrayList<>();
+        for (Player p : tableManager.getPlayers()) {
+            ids.add(p == null ? null : p.getSessionId());
+        }
+        return ids;
+    }
+
+    private boolean shouldAutoStartNextHand() {
+        if (tableManager.getPlayerCount() < 2) return false;
+        if (!tableManager.getWaitingQueue().isEmpty()) return false;
+        if (!tableManager.getSpectators().isEmpty()) return false;
+        if (tableChangedSinceLastHand) return false;
+        return getSeatSessionIds().equals(lastHandSeatIds);
     }
 
     // =========================
