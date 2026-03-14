@@ -112,8 +112,10 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             gameEngine.handlePlayerLeave(seat);
         }
 
-        // move queue player into seat
-        tableManager.fillSeatsFromQueue();
+        // only move queue players when no hand is running
+        if (!gameEngine.isGameRunning()) {
+            tableManager.fillSeatsFromQueue();
+        }
 
         broadcastTableState();
         broadcastQueuePositions();
@@ -246,5 +248,18 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         spectator.getSession().sendMessage(
                 new TextMessage(mapper.writeValueAsString(msg))
         );
+
+        if (gameEngine.isGameRunning()) {
+            Map<String, Object> communityMsg = new HashMap<>();
+            communityMsg.put("type", "community_cards");
+            communityMsg.put("stage", gameEngine.getState().name());
+            communityMsg.put("cards", gameEngine.getCommunityCards());
+            communityMsg.put("pot", gameEngine.getPot());
+            communityMsg.put("currentBet", gameEngine.getCurrentBet());
+
+            spectator.getSession().sendMessage(
+                    new TextMessage(mapper.writeValueAsString(communityMsg))
+            );
+        }
     }
 }

@@ -450,7 +450,7 @@ public class GameEngine {
 
             broadcast(msg);
 
-            //finishGame();
+            finishGame();
             return true;
         }
         return false;
@@ -484,7 +484,7 @@ public class GameEngine {
 
         broadcast(msg);
 
-        //finishGame();
+        finishGame();
     }
 
     // ---------- GAME END ----------
@@ -500,6 +500,8 @@ public class GameEngine {
         currentTurn = -1;
 
         moveBrokePlayersToQueue();
+
+        table.moveSpectatorsToQueue();
 
         table.fillSeatsFromQueue();
 
@@ -532,11 +534,25 @@ public class GameEngine {
 
         Player p = table.getPlayers().get(seat);
 
-        if (p == null) return;
+        if (p != null) {
+            p.setFolded(true);
+            p.setActed(true);
+        }
 
-        p.setFolded(true);
+        if (state == GameState.WAITING || state == GameState.SHOWDOWN) return;
 
-        checkWin();
+        if (checkWin()) {
+            return;
+        }
+
+        if (isRoundComplete()) {
+            nextStage();
+            return;
+        }
+
+        if (seat == currentTurn) {
+            nextTurn();
+        }
     }
 
     // ---------- BROADCAST ----------
@@ -590,6 +606,14 @@ public class GameEngine {
 
     public int getDealerSeat() {
         return dealerSeat;
+    }
+
+    public GameState getState() {
+        return state;
+    }
+
+    public List<String> getCommunityCards() {
+        return new ArrayList<>(community);
     }
 
     // ---------- STATE RESET ----------

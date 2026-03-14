@@ -45,6 +45,25 @@ public class TableManager {
     }
 
     // =========================
+    // SPECTATOR PROMOTION
+    // =========================
+
+    public void moveSpectatorsToQueue() {
+
+        if (spectators.isEmpty()) return;
+
+        for (Player spectator : spectators) {
+            if (spectator == null) continue;
+            spectator.setSpectator(false);
+            spectator.resetForRound();
+            spectator.setSeat(-1);
+            waitingQueue.add(spectator);
+        }
+
+        spectators.clear();
+    }
+
+    // =========================
     // PLAYER COUNT
     // =========================
 
