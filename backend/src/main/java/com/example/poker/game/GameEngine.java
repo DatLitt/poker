@@ -54,7 +54,7 @@ public class GameEngine {
     // ---------- GAME START ----------
     public void startGame() throws Exception {
 
-        if (table.getActivePlayerCount() < 2) {
+        if (table.getPlayerCount() < 2) {
             state = GameState.WAITING;
             return;
         }
@@ -459,6 +459,27 @@ public class GameEngine {
             msg.put("seat", winner != null ? winner.getSeat() : -1);
 
             broadcast(msg);
+
+            Map<String, Object> showdownMsg = new HashMap<>();
+            showdownMsg.put("type", "showdown");
+            showdownMsg.put("winnerSeat", winner != null ? winner.getSeat() : -1);
+            List<Integer> winnerSeats = new ArrayList<>();
+            if (winner != null) {
+                winnerSeats.add(winner.getSeat());
+            }
+            showdownMsg.put("winnerSeats", winnerSeats);
+            showdownMsg.put("community", community);
+
+            List<Map<String, Object>> winnerBestHands = new ArrayList<>();
+            if (winner != null && winner.getCards().size() + community.size() >= 5) {
+                Map<String, Object> hand = new HashMap<>();
+                hand.put("seat", winner.getSeat());
+                hand.put("cards", HandEvaluator.bestFiveCards(winner.getCards(), community));
+                winnerBestHands.add(hand);
+            }
+            showdownMsg.put("winnerBestHands", winnerBestHands);
+
+            broadcast(showdownMsg);
 
             finishGame();
             return true;
