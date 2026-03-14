@@ -57,10 +57,28 @@ public class TableManager {
             spectator.setSpectator(false);
             spectator.resetForRound();
             spectator.setSeat(-1);
-            waitingQueue.add(spectator);
+            if (!waitingQueue.contains(spectator)) {
+                waitingQueue.add(spectator);
+            }
         }
 
         spectators.clear();
+    }
+
+    public Player promoteNextInQueueToSpectator() {
+        for (Player next : waitingQueue) {
+            if (next == null) continue;
+            if (next.isSpectator()) continue;
+
+            next.setSpectator(true);
+            next.resetForRound();
+            next.setSeat(-1);
+
+            spectators.add(next);
+            return next;
+        }
+
+        return null;
     }
 
     // =========================

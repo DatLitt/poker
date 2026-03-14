@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.socket.TextMessage;
 
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class GameEngine {
 
@@ -35,6 +38,13 @@ public class GameEngine {
     private int dealerSeat = 0;
 
     private int minRaiseAmount = 0;
+
+    private final ScheduledExecutorService endGameScheduler =
+            Executors.newSingleThreadScheduledExecutor();
+
+    private final int endGamePauseSeconds = 10;
+
+    private volatile boolean endPauseActive = false;
 
     public GameEngine(TableManager table, Runnable onGameEnd) {
         this.table = table;
@@ -482,6 +492,15 @@ public class GameEngine {
         msg.put("winnerSeats", winnerSeats);
         msg.put("community", community);
 
+        List<Map<String, Object>> winnerBestHands = new ArrayList<>();
+        for (Player p : winners) {
+            Map<String, Object> hand = new HashMap<>();
+            hand.put("seat", p.getSeat());
+            hand.put("cards", HandEvaluator.bestFiveCards(p.getCards(), community));
+            winnerBestHands.add(hand);
+        }
+        msg.put("winnerBestHands", winnerBestHands);
+
         broadcast(msg);
 
         finishGame();
@@ -506,7 +525,15 @@ public class GameEngine {
         table.fillSeatsFromQueue();
 
         if (onGameEnd != null) {
-            onGameEnd.run();
+            endPauseActive = true;
+            endGameScheduler.schedule(() -> {
+                try {
+                    endPauseActive = false;
+                    onGameEnd.run();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }, endGamePauseSeconds, TimeUnit.SECONDS);
         }
     }
 
@@ -614,6 +641,10 @@ public class GameEngine {
 
     public List<String> getCommunityCards() {
         return new ArrayList<>(community);
+    }
+
+    public boolean isEndPauseActive() {
+        return endPauseActive;
     }
 
     // ---------- STATE RESET ----------

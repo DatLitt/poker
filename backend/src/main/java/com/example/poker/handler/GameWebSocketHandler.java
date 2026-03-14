@@ -112,8 +112,13 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             gameEngine.handlePlayerLeave(seat);
         }
 
-        // only move queue players when no hand is running
-        if (!gameEngine.isGameRunning()) {
+        if (gameEngine.isGameRunning()) {
+            Player promoted = tableManager.promoteNextInQueueToSpectator();
+            if (promoted != null) {
+                sendSpectatorState(promoted);
+            }
+        } else {
+            // only move queue players when no hand is running
             tableManager.fillSeatsFromQueue();
         }
 
@@ -130,6 +135,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // COUNTDOWN CONTROL
     // =========================
     private void startCountdownIfReady() {
+
+        if (gameEngine.isEndPauseActive()) return;
 
         if (!tableManager.shouldStartCountdown()) return;
 
@@ -219,6 +226,11 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         int position = 1;
 
         for (Player p : tableManager.getWaitingQueue()) {
+
+            if (p.isSpectator()) {
+                position++;
+                continue;
+            }
 
             if (p.getSession().isOpen()) {
 

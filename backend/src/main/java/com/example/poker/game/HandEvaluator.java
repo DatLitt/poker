@@ -79,6 +79,53 @@ public final class HandEvaluator {
         return best;
     }
 
+    public static List<String> bestFiveCards(List<String> holeCards, List<String> community) {
+        List<Card> cards = new ArrayList<>();
+        cards.addAll(parseCards(holeCards));
+        cards.addAll(parseCards(community));
+
+        if (cards.size() < 5) {
+            throw new IllegalArgumentException("Need at least 5 cards to evaluate");
+        }
+
+        HandValue best = null;
+        List<Card> bestFive = null;
+        int n = cards.size();
+
+        for (int i = 0; i < n - 4; i++) {
+            for (int j = i + 1; j < n - 3; j++) {
+                for (int k = j + 1; k < n - 2; k++) {
+                    for (int l = k + 1; l < n - 1; l++) {
+                        for (int m = l + 1; m < n; m++) {
+                            List<Card> five = List.of(
+                                    cards.get(i),
+                                    cards.get(j),
+                                    cards.get(k),
+                                    cards.get(l),
+                                    cards.get(m)
+                            );
+                            HandValue value = evaluateFive(five);
+                            if (best == null || value.compareTo(best) > 0) {
+                                best = value;
+                                bestFive = new ArrayList<>(five);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (bestFive == null) {
+            return new ArrayList<>();
+        }
+
+        List<String> result = new ArrayList<>();
+        for (Card c : bestFive) {
+            result.add(c.raw);
+        }
+        return result;
+    }
+
     private static HandValue evaluateFive(List<Card> cards) {
         List<Integer> ranks = new ArrayList<>();
         Map<Integer, Integer> rankCounts = new HashMap<>();
@@ -234,7 +281,7 @@ public final class HandEvaluator {
                     rank = Integer.parseInt(rankStr);
                     break;
             }
-            cards.add(new Card(rank, suit));
+            cards.add(new Card(rank, suit, s));
         }
         return cards;
     }
@@ -242,10 +289,12 @@ public final class HandEvaluator {
     private static final class Card {
         private final int rank;
         private final char suit;
+        private final String raw;
 
-        private Card(int rank, char suit) {
+        private Card(int rank, char suit, String raw) {
             this.rank = rank;
             this.suit = suit;
+            this.raw = raw;
         }
     }
 
