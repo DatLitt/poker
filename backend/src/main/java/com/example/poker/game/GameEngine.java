@@ -51,6 +51,30 @@ public class GameEngine {
         this.onGameEnd = onGameEnd;
     }
 
+    private List<Integer> buildMoneySnapshot() {
+        List<Integer> money = new ArrayList<>();
+        for (Player p : table.getPlayers()) {
+            money.add(p == null ? null : p.getChips());
+        }
+        return money;
+    }
+
+    private void awardPotToWinners(List<Player> winners) {
+        if (winners == null || winners.isEmpty() || pot <= 0) return;
+
+        int share = pot / winners.size();
+        int remainder = pot % winners.size();
+
+        for (int i = 0; i < winners.size(); i++) {
+            Player winner = winners.get(i);
+            if (winner == null) continue;
+            int payout = share + (i == 0 ? remainder : 0);
+            winner.setChips(winner.getChips() + payout);
+        }
+
+        pot = 0;
+    }
+
     // ---------- GAME START ----------
     public void startGame() throws Exception {
 
@@ -451,8 +475,12 @@ public class GameEngine {
                 active.add(p);
         }
 
-        if(active.size() <= 1){
+        if (active.size() <= 1) {
             Player winner = active.size()==1 ? active.get(0) : null;
+
+            if (winner != null) {
+                awardPotToWinners(Collections.singletonList(winner));
+            }
 
             Map<String,Object> msg = new HashMap<>();
             msg.put("type","game_win");
@@ -501,6 +529,8 @@ public class GameEngine {
                 ? new ArrayList<>()
                 : HandEvaluator.determineWinners(active, community);
         Player winner = winners.isEmpty() ? null : winners.get(0);
+
+        awardPotToWinners(winners);
 
         Map<String, Object> msg = new HashMap<>();
 
@@ -605,6 +635,8 @@ public class GameEngine {
 
     // ---------- BROADCAST ----------
     private void broadcast(Map<String, Object> msg) throws Exception {
+
+        msg.put("money", buildMoneySnapshot());
 
         String json = mapper.writeValueAsString(msg);
 
