@@ -215,6 +215,10 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     private void broadcastTableState() throws Exception {
 
         List<String> seats = tableManager.getSeatNames();
+        List<Integer> money = new ArrayList<>();
+        for (Player p : tableManager.getPlayers()) {
+            money.add(p == null ? null : p.getChips());
+        }
 
         for (Player player : tableManager.getPlayers()) {
 
@@ -222,6 +226,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
                 TableState state = new TableState(
                         seats,
+                        money,
                         player.getSeat(),
                         gameEngine.getPot(),
                         gameEngine.getCurrentBet()
