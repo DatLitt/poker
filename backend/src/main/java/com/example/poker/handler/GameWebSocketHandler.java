@@ -56,9 +56,13 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                 // GAME RUNNING → spectator
                 if (gameEngine.isGameRunning()) {
 
-                    player = tableManager.addSpectator(name, session);
-
-                    sendSpectatorState(player);
+                    if (tableManager.canAddSpectatorDuringGame()) {
+                        player = tableManager.addSpectator(name, session);
+                        sendSpectatorState(player);
+                    } else {
+                        player = tableManager.addToQueue(name, session);
+                        broadcastQueuePositions();
+                    }
                     return;
                 }
 

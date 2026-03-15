@@ -40,6 +40,30 @@ public class TableManager {
         return waitingQueue;
     }
 
+    public int getOpenSeatCount() {
+        int open = 0;
+        for (Player p : seats) {
+            if (p == null) {
+                open++;
+            }
+        }
+        return open;
+    }
+
+    public boolean hasNonSpectatorInQueue() {
+        for (Player p : waitingQueue) {
+            if (p == null) continue;
+            if (!p.isSpectator()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean canAddSpectatorDuringGame() {
+        return getOpenSeatCount() > spectators.size() && !hasNonSpectatorInQueue();
+    }
+
     public int getCountdown() {
         return countdown;
     }
@@ -151,6 +175,15 @@ public class TableManager {
         spectators.add(spectator);
 
         return spectator;
+    }
+
+    public Player addToQueue(String name, WebSocketSession session) {
+
+        Player queued = new Player(name, -1, session);
+
+        waitingQueue.add(queued);
+
+        return queued;
     }
 
     // =========================
