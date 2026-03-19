@@ -1,16 +1,62 @@
 .seat {
   position: absolute;
-
   width: fit-content;
-  height: 55px;
-
-  background: white;
-  border-radius: 50%;
-
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: black;
   font-size: 11px;
   font-weight: bold;
+}
+.player_name {
+  height: 30px;
+  background: white;
+  color: black;
+}
+.money {
+  color: white;
+}
+
+.seat1 {
+  top: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.seat2 {
+  top: 5%;
+  right: -20px;
+}
+
+.seat3 {
+  top: 50%;
+  right: -50px;
+  transform: translateY(-50%);
+}
+
+.seat4 {
+  bottom: 10%;
+  right: -25px;
+}
+
+.seat5 {
+  bottom: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.seat6 {
+  bottom: 10%;
+  left: -25px;
+}
+
+.seat7 {
+  top: 50%;
+  left: -50px;
+  transform: translateY(-50%);
+}
+
+.seat8 {
+  top: 10%;
+  left: -25px;
 }

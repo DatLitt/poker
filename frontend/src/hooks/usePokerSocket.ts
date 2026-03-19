@@ -15,6 +15,7 @@ export function usePokerSocket(
   SetPot: Dispatch<SetStateAction<number>>,
   setPlayerTurn: Dispatch<SetStateAction<number | null>>,
   setWinner: Dispatch<SetStateAction<number | null>>,
+  setMoney: Dispatch<SetStateAction<(number | null)[]>>,
 ) {
   useEffect(() => {
     const handler = (event: MessageEvent) => {
@@ -28,9 +29,11 @@ export function usePokerSocket(
           setTableFull(false);
           setCommunityCards([null, null, null, null, null]);
           SetPot(data.pot);
+
           break;
         case "table_full":
           setTableFull(true);
+
           break;
         case "game_countdown":
           setCountdown(data.seconds);
@@ -41,8 +44,8 @@ export function usePokerSocket(
           setGameState("spectating");
           break;
         case "deal_cards":
+          setWinner(null);
           setGameState("playing");
-
           console.log("Your cards:", data.cards);
           setPlayerCards(data.cards);
           break;
@@ -53,6 +56,7 @@ export function usePokerSocket(
           setPlayerTurn(data.seat);
           setActionAllowed(data.allowedActions);
           SetPot(data.pot);
+          setMoney(data.money);
           break;
         case "showdown":
           setPlayerTurn(null);

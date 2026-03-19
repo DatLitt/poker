@@ -26,6 +26,7 @@ export default function PokerTable() {
   ]);
   const [actionAllowed, setActionAllowed] = useState<string[]>([]);
   const [playerTurn, setPlayerTurn] = useState<number | null>(null);
+  const [money, setMoney] = useState<(number | null)[]>(Array(8).fill(null));
   const [winner, setWinner] = useState<number | null>(null);
   usePokerSocket(
     setSeats,
@@ -39,6 +40,7 @@ export default function PokerTable() {
     setPot,
     setPlayerTurn,
     setWinner,
+    setMoney,
   );
 
   function rotateSeats(seats: (string | null)[], yourId: number) {
@@ -51,8 +53,19 @@ export default function PokerTable() {
       return seats[index];
     });
   }
+  function rotateMoney(money: (number | null)[], yourId: number) {
+    const targetSeat = 4; // seat bottom (UI position)
+
+    const shift = targetSeat - yourId;
+
+    return seats.map((_, i) => {
+      const index = (i - shift + seats.length) % seats.length;
+      return money[index];
+    });
+  }
 
   const displaySeats = rotateSeats(seats, yourId);
+  const displayMoney = rotateMoney(money, yourId);
 
   return (
     <div className="table">
@@ -65,7 +78,12 @@ export default function PokerTable() {
       {tableFull && <div className="table-full">Table is full</div>}
       {!tableFull &&
         displaySeats.map((player, i) => (
-          <Seat key={i} player={player} className={`seat seat${i + 1}`} />
+          <Seat
+            key={i}
+            player={player}
+            money={displayMoney[i]}
+            className={`seat seat${i + 1}`}
+          />
         ))}
       {gameState === "spectating" && (
         <div className="spectating">You are spectating</div>
