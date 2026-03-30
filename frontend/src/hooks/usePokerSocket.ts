@@ -49,14 +49,20 @@ export function usePokerSocket(
           console.log("Your cards:", data.cards);
           setPlayerCards(data.cards);
           break;
-        case "community_cards":
-          setCommunityCards(data.cards);
+        case "flop":
           break;
+        case "turn":
+          break;
+        case "river":
+          break;
+
         case "player_turn":
           setPlayerTurn(data.seat);
           setActionAllowed(data.allowedActions);
           SetPot(data.pot);
           setMoney(data.money);
+          break;
+        case "player_action_result":
           break;
         case "showdown":
           setPlayerTurn(null);
