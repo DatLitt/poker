@@ -11,11 +11,17 @@ export default function PokerTable() {
   const [yourId, setYourId] = useState(1); //user's seat before rotate
   const [seats, setSeats] = useState<(string | null)[]>(Array(8).fill(null));
   const [pot, setPot] = useState(0);
+  const [bets, setBets] = useState<number[]>(Array(8).fill(0));
+  const [folded, setFolded] = useState<boolean[]>(Array(8).fill(false));
+  const [allIn, setAllIn] = useState<boolean[]>(Array(8).fill(false));
+  const [minRaise, setMinRaise] = useState<number>(0);
+  const [actionResult, setActionResult] = useState({});
   const [tableFull, setTableFull] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [gameState, setGameState] = useState<
     "waiting" | "countdown" | "playing" | "spectating"
   >("waiting");
+  const [gamePhase, setGamePhase] = useState("");
   const [playerCards, setPlayerCards] = useState<string[]>([]);
   const [communityCards, setCommunityCards] = useState<(string | null)[]>([
     null,
@@ -24,10 +30,14 @@ export default function PokerTable() {
     null,
     null,
   ]);
+  const [flop, setFlop] = useState<string | null[]>([null, null, null]);
+  const [turn, setTurn] = useState<string | null>(null);
+  const [river, setRiver] = useState<string | null>(null);
   const [actionAllowed, setActionAllowed] = useState<string[]>([]);
   const [playerTurn, setPlayerTurn] = useState<number | null>(null);
   const [money, setMoney] = useState<(number | null)[]>(Array(8).fill(null));
   const [winner, setWinner] = useState<number | null>(null);
+  const [winningHand, setWinningHand] = useState("");
   usePokerSocket(
     setSeats,
     setYourId,
